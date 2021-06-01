@@ -1,0 +1,5 @@
+rootProject.name = "HomeGrownExitApp"
+include ':app'
+include ':ANDCoreNetwork'
+
+include ':libusbcamera'

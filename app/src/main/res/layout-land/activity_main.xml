@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingDefaultResource">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.android.safeway.homegrownexitapp.viewmodel.HomeViewModel" />
+
+        <import type="android.view.View" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        tools:context=".ui.MainActivity">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="start|center"
+                android:layout_weight="0.5">
+
+                <com.serenegiant.usb.widget.UVCCameraTextureView
+                    android:id="@+id/camera_view"
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+
+                    />
+
+                <LinearLayout
+                    android:id="@+id/llayout_contrast"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:orientation="horizontal"
+                    >
+                    <Button
+                        android:id="@+id/btn_captureVideo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/RED"
+                        android:text="Rec"/>
+
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="7dp"
+                        android:paddingTop="7dp"
+                        android:text="(H.G_contrast_options)"
+                        android:textColor="@color/white" />
+
+                    <SeekBar
+                        android:id="@+id/seekbar_contrast"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/llayout_brightness"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_marginBottom="50dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_captureImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Snap"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="7dp"
+                        android:paddingTop="7dp"
+                        android:text="(H.G_brightness_options)"
+                        android:textColor="@color/white" />
+
+                    <SeekBar
+                        android:id="@+id/seekbar_brightness"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/switch_rec_voice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignLeft="@+id/llayout_brightness"
+                    android:layout_alignStart="@+id/llayout_brightness"
+                    android:layout_below="@+id/toolbar"
+                    android:layout_marginLeft="13dp"
+                    android:layout_marginStart="13dp"
+                    android:layout_marginTop="27dp"
+                    android:checked="false"
+                    android:text="closeVoice"
+                    android:textColor="@color/white" />
+
+            </FrameLayout>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_weight="0.5">
+
+                <TextView
+                    android:id="@+id/txt_welcome"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:background="@color/white"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:padding="80dp"
+                    android:text="@string/msg_welcome"
+                    android:textColor="@color/black"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    />
+
+                <TextView
+                    android:id="@+id/txt_green"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:background="@android:color/holo_green_dark"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:padding="80dp"
+                    android:text="@string/msg_green"
+                    android:textColor="@android:color/white"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:visibility="@{viewModel.showGreen? View.VISIBLE : View.GONE}" />
+
+                <TextView
+                    android:id="@+id/txt_red"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:background="@android:color/holo_red_dark"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:padding="80dp"
+                    android:text="@string/msg_red"
+                    android:textColor="@android:color/white"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:visibility="@{viewModel.showRed? View.VISIBLE : View.GONE}" />
+
+            </FrameLayout>
+        </LinearLayout>
+
+    </RelativeLayout>
+</layout>

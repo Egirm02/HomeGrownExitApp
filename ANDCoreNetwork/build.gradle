@@ -1,0 +1,116 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+initVersions()
+logDependencies()
+
+buildscript {
+
+    ext {
+        kotlin_version_final = has("kotlin_version") ? kotlin_version : '1.3.72'
+    }
+
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version_final"
+    }
+}
+
+android {
+    compileSdkVersion 28
+
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    api "com.squareup.retrofit2:retrofit:${project.networkModuleDependencies.retrofit}"
+    api "com.squareup.retrofit2:converter-gson:${project.networkModuleDependencies.retrofit}"
+    api "com.squareup.retrofit2:converter-scalars:${project.networkModuleDependencies.retrofit}"
+
+    implementation "com.squareup.okhttp3:logging-interceptor:${project.networkModuleDependencies.okHttpInterceptor}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${project.networkModuleDependencies.coroutinesCore}"
+    implementation "com.auth0.android:jwtdecode:${project.networkModuleDependencies.jwtDecode}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${project.kotlin_version_final}"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:${project.commonModuleDependencies.lifecycle}"
+
+    // Imperva SDK
+    implementation files('libs/protection-android-release.aar')
+}
+
+configurations {
+    all*.exclude group: 'xpp3', module: 'xpp3'
+}
+
+private def initVersions() {
+
+    // Handle common versions
+    def commonMap = [
+            lifecycle: "2.1.0"
+    ]
+
+    if (!project.hasProperty('commonModuleDependencies')) {
+        // commonModuleDependencies does not exist
+        project.ext.commonModuleDependencies = commonMap
+    }
+
+    commonMap.each { k, v ->
+        setIfNotExist(project.commonModuleDependencies, k, v)
+    }
+
+    // Handle network versions
+    def networkMap = [
+            retrofit         : "2.6.2",
+            okHttpInterceptor: "3.4.1",
+            coroutinesCore   : "1.3.7",
+            jwtDecode        : "1.1.1"
+    ]
+
+    if (!project.hasProperty('networkModuleDependencies')) {
+        // networkModuleDependencies does not exist
+        project.ext.networkModuleDependencies = networkMap
+    }
+
+    networkMap.each { k, v ->
+        setIfNotExist(project.networkModuleDependencies, k, v)
+    }
+}
+
+private def logDependencies() {
+    println("====== Network Module Versions, START ======")
+    print("====== Common:")
+    println(project.commonModuleDependencies)
+    print("====== Module:")
+    println(project.networkModuleDependencies)
+    println("====== Network Module Versions, END ========")
+
+    println()
+}
+
+private static def setIfNotExist(map, key, defaultValue) {
+    if (!(map.containsKey(key))) {
+        map.put(key, defaultValue)
+    }
+}

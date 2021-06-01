@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">HomeGrownExitApp</string>
+    <string name="msg_welcome">Dear customer, please scan your receipt for audit.</string>
+    <string name="msg_green">Audit Success. Thank you for shopping.</string>
+    <string name="msg_red">Please call or wait for our attendant. </string>
+    <string name="please_wait">Loading..Please Wait..</string>
+</resources>
