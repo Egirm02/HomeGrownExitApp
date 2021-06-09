@@ -28,6 +28,9 @@ class HomeViewModel(application: Application) :
     var showRed = ObservableBoolean(false)
     var showGreen = ObservableBoolean(false)
     var showWelcome = ObservableBoolean(true)
+    var showSurfaceView = ObservableBoolean(true)
+    var showImage = ObservableBoolean(false)
+
 
     enum class CALLBACK {
         NONE, SHOW_RED, SHOW_GREEN, SHOW_PROGRESS
