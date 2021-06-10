@@ -1,7 +1,10 @@
 package com.android.safeway.homegrownexitapp.ui
 
+//import androidx.appcompat.app.AlertDialog
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.hardware.usb.UsbDevice
 import android.os.Build
 import android.os.Bundle
@@ -15,7 +18,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.SeekBar
 import android.widget.Toast
-//import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -36,12 +38,14 @@ import com.serenegiant.usb.common.AbstractUVCCameraHandler.OnCaptureListener
 import com.serenegiant.usb.common.AbstractUVCCameraHandler.OnEncodeResultListener
 import com.serenegiant.usb.encoder.RecordParams
 import com.serenegiant.usb.widget.CameraViewInterface
+import java.io.File
 import java.util.*
 
 
 class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
     CameraViewInterface.Callback {
 
+    private var picPath: String = ""
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: HomeViewModel
     private var barcode = ""
@@ -145,24 +149,25 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
         mUVCCameraView = mTextureView as CameraViewInterface
         mUVCCameraView.setCallback(this)
         mCameraHelper = UVCCameraHelper.getInstance()
-        mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG)
-        mCameraHelper.initUSBMonitor(this, mUVCCameraView, listener)
-
-        mCameraHelper.setOnPreviewFrameListener { nv21Yuv ->
-            Log.d(
-                this.TAG,
-                "onPreviewResult: " + nv21Yuv.size
-            )
+        try {
+            mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG)
+            mCameraHelper.initUSBMonitor(this, mUVCCameraView, listener)
+            mCameraHelper.setOnPreviewFrameListener { nv21Yuv ->
+                Log.d(
+                    this.TAG,
+                    "onPreviewResult: " + nv21Yuv.size
+                )
+            }
+        } catch (e: IllegalStateException) {
+            //ignore for now
         }
 
         if (isVersionM()) {
             checkAndRequestPermissions()
-        } else {
-            startMainActivity()
         }
 
         try {
-          binding.btnCaptureImage.setOnClickListener { captureImage() }
+            binding.btnCaptureImage.setOnClickListener { captureImage() }
             binding.btnCaptureVideo.setOnClickListener { captureVideo(3) }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -229,24 +234,13 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
             }
         }
         // check permissions has granted
-        if (mMissPermissions.isEmpty()) {
-            startMainActivity()
-        } else {
+        if (mMissPermissions.isEmpty().not()) {
             ActivityCompat.requestPermissions(
                 this,
                 mMissPermissions.toTypedArray<String>(),
                 REQUEST_CODE
             )
         }
-    }
-
-    private fun startMainActivity() {
-        Handler().postDelayed({
-            barcode = "347557"
-            handleView()
-//            startActivity(Intent(this@MainActivity, USBCameraActivity::class.java))
-//            finish()
-        }, 3000)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -276,6 +270,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
     }
 
     private fun handleView() {
+        captureImage()
         isAuditInProgress = true
         viewModel.initLookup(barcode)
         //observes for any event which coming from view model
@@ -283,12 +278,14 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
 
             when (type) {
                 HomeViewModel.CALLBACK.SHOW_GREEN -> {
+                    binding.imgBasket.setBackgroundColor(getColor(android.R.color.holo_green_dark))
                     //wait for 5 seconds then switch to welcome view
                     Handler(Looper.getMainLooper()).postDelayed({
                         resetView()
                     }, 5000)
                 }
                 HomeViewModel.CALLBACK.SHOW_RED -> {
+                    binding.imgBasket.setBackgroundColor(getColor(android.R.color.holo_red_dark))
                     //wait for 10 seconds then switch to welcome view
                     Handler(Looper.getMainLooper()).postDelayed({
                         resetView()
@@ -311,6 +308,10 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
         viewModel.showGreen.set(false)
         viewModel.showRed.set(false)
         viewModel.showWelcome.set(true)
+        viewModel.showSurfaceView.set(true)
+        viewModel.showImage.set(false)
+        binding.imgBasket.setBackgroundColor(getColor(R.color.white))
+
     }
 
     private fun captureImage() {
@@ -319,8 +320,8 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
             showShortMsg(msg)
             return
         }
-        val picPath = (UVCCameraHelper.ROOT_PATH + "USBCamera" + "/images/"
-                + System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG)
+        picPath = (UVCCameraHelper.ROOT_PATH + "USBCamera" + "/images/"
+                + System.currentTimeMillis() + UVCCameraHelper.SUFFIX_PNG)
         mCameraHelper.capturePicture(picPath,
             OnCaptureListener { path ->
                 if (TextUtils.isEmpty(path)) {
@@ -331,8 +332,31 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
                         this@MainActivity,
                         "save path:$path", Toast.LENGTH_SHORT
                     ).show()
+                    loadImage()
                 }
             })
+    }
+
+    /**
+     * Method to load the image to the view to show preview.
+     */
+    private fun loadImage() {
+        try {
+            val imgFile = File(picPath)
+            if (imgFile.exists()) {
+                val myBitmap: Bitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+                binding.imgBasket.setImageBitmap(myBitmap)
+                viewModel.showSurfaceView.set(false)
+                viewModel.showImage.set(true)
+
+            }
+        } catch (e: Exception) {
+            //there are chances of getting Nullpointer, IllegalArgument, SecurityExceptions. In all the cases we need to do the same. Hence not catching it separately.
+            viewModel.showSurfaceView.set(true)
+            viewModel.showImage.set(false)
+        }
+
+
     }
 
 

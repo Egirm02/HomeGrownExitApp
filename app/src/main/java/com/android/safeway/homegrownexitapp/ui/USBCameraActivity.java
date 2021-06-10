@@ -245,7 +245,7 @@ public class USBCameraActivity extends AppCompatActivity implements CameraDialog
             return;
         }
         String picPath = UVCCameraHelper.ROOT_PATH + "USBCamera" +"/images/"
-                + System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG;
+                + System.currentTimeMillis() + UVCCameraHelper.SUFFIX_PNG;
 
         mCameraHelper.capturePicture(picPath, new AbstractUVCCameraHandler.OnCaptureListener() {
             @Override

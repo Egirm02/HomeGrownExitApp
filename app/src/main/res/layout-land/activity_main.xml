@@ -18,6 +18,7 @@
         tools:context=".ui.MainActivity">
 
         <LinearLayout
+            android:background="@color/white"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:orientation="horizontal"
@@ -28,15 +29,30 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="start|center"
+                android:layout_marginRight="1dp"
                 android:layout_weight="0.5">
 
-                <com.serenegiant.usb.widget.UVCCameraTextureView
-                    android:id="@+id/camera_view"
-
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="match_parent">
 
-                    />
+                    <com.serenegiant.usb.widget.UVCCameraTextureView
+                        android:id="@+id/camera_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:layout_gravity="center_vertical"
+                        android:visibility="@{viewModel.showSurfaceView ? View.VISIBLE : View.GONE}" />
+
+                    <ImageView
+                        android:id="@+id/img_basket"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerInside"
+                        android:visibility="@{viewModel.showImage ? View.VISIBLE : View.GONE}" />
+                </RelativeLayout>
+
+
 
                 <LinearLayout
                     android:id="@+id/llayout_contrast"
@@ -47,6 +63,7 @@
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
                     android:orientation="horizontal"
+                    android:visibility="gone"
                     >
                     <Button
                         android:id="@+id/btn_captureVideo"
@@ -80,13 +97,14 @@
                     android:layout_marginBottom="50dp"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
                     <Button
                         android:id="@+id/btn_captureImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Snap"/>
+                        android:text="Snap" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -116,7 +134,8 @@
                     android:layout_marginTop="27dp"
                     android:checked="false"
                     android:text="closeVoice"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/white"
+                    android:visibility="gone" />
 
             </FrameLayout>
             <FrameLayout
