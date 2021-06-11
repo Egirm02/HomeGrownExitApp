@@ -1,6 +1,6 @@
 package com.android.safeway.homegrownexitapp.ui
 
-//import androidx.appcompat.app.AlertDialog
+
 import android.Manifest
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
@@ -45,9 +45,13 @@ import com.serenegiant.usb.widget.CameraViewInterface
 import java.io.File
 import java.util.*
 
+const val LIGHT_RED = "2"
+const val LIGHT_GREEN = "1"
+const val LIGHT_OFF = "0"
 
 class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
     CameraViewInterface.Callback {
+
 
     private var picPath: String = ""
     private lateinit var binding: ActivityMainBinding
@@ -186,7 +190,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
         }
 
         try {
-            binding.btnCaptureImage.setOnClickListener { turnRed() }
+            binding.btnCaptureImage.setOnClickListener { changeLightState("1") }
             binding.btnCaptureVideo.setOnClickListener { captureVideo(3) }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -203,8 +207,8 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
 
     }
 
-    fun turnRed(){
-        characteristicTX!!.setValue("1")
+    private fun changeLightState(state: String) {
+        characteristicTX?.setValue(state)
         mBluetoothLeService?.writeCharacteristic(characteristicTX)
         mBluetoothLeService?.setCharacteristicNotification(characteristicRX, true)
     }
@@ -308,6 +312,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
             when (type) {
                 HomeViewModel.CALLBACK.SHOW_GREEN -> {
                     binding.imgBasket.setBackgroundColor(getColor(android.R.color.holo_green_dark))
+                    changeLightState(LIGHT_GREEN)
                     //wait for 5 seconds then switch to welcome view
                     Handler(Looper.getMainLooper()).postDelayed({
                         resetView()
@@ -315,6 +320,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
                 }
                 HomeViewModel.CALLBACK.SHOW_RED -> {
                     binding.imgBasket.setBackgroundColor(getColor(android.R.color.holo_red_dark))
+                    changeLightState(LIGHT_RED)
                     //wait for 10 seconds then switch to welcome view
                     Handler(Looper.getMainLooper()).postDelayed({
                         resetView()
@@ -340,6 +346,8 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
         viewModel.showSurfaceView.set(true)
         viewModel.showImage.set(false)
         binding.imgBasket.setBackgroundColor(getColor(R.color.white))
+        changeLightState(LIGHT_OFF)
+
 
     }
 

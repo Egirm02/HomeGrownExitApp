@@ -104,7 +104,8 @@
                         android:id="@+id/btn_captureImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Turn Red" />
+                        android:text="Turn Red"
+                        android:visibility="gone"/>
 
                     <TextView
                         android:layout_width="0dp"
