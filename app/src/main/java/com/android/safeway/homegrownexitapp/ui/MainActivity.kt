@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
     )
 
     //ble
-    private lateinit var mBluetoothLeService: BluetoothLeService
+    private var mBluetoothLeService: BluetoothLeService? = null
     private var mConnected = false
     private var characteristicTX: BluetoothGattCharacteristic? = null
     private var characteristicRX: BluetoothGattCharacteristic? = null
@@ -205,8 +205,8 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
 
     fun turnRed(){
         characteristicTX!!.setValue("1")
-        mBluetoothLeService.writeCharacteristic(characteristicTX)
-        mBluetoothLeService.setCharacteristicNotification(characteristicRX, true)
+        mBluetoothLeService?.writeCharacteristic(characteristicTX)
+        mBluetoothLeService?.setCharacteristicNotification(characteristicRX, true)
     }
 
     private fun showShortMsg(msg: String) {
@@ -492,12 +492,15 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as LocalBinder).service
-            if (!mBluetoothLeService.initialize()) {
-              //  Log.e(DeviceControlActivity.TAG, "Unable to initialize Bluetooth")
-                finish()
+            mBluetoothLeService?.let{
+                if (!it.initialize()) {
+                    //  Log.e(DeviceControlActivity.TAG, "Unable to initialize Bluetooth")
+                    finish()
+                }
+                // Automatically connects to the device upon successful start-up initialization.
+                it.connect(mDeviceAddress)
             }
-            // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect(mDeviceAddress)
+
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -519,7 +522,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
                // clearUI()
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED == action) {
                 // Show all the supported services and characteristics on the user interface.
-                displayGattServices(mBluetoothLeService.supportedGattServices)
+                displayGattServices(mBluetoothLeService?.supportedGattServices)
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE == action) {
               //  displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA))
             }
@@ -534,7 +537,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
                         mGattUpdateReceiver, makeGattUpdateIntentFilter()
                     )
                     if (mBluetoothLeService != null) {
-                        val result = mBluetoothLeService.connect(mDeviceAddress)
+                        val result = mBluetoothLeService?.connect(mDeviceAddress)
                      //   Log.d(DeviceControlActivity.TAG, "Connect request result=$result")
                     }
     }
