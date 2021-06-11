@@ -2,14 +2,14 @@ package com.android.safeway.homegrownexitapp.ui
 
 //import androidx.appcompat.app.AlertDialog
 import android.Manifest
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattService
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.hardware.usb.UsbDevice
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
@@ -17,6 +17,7 @@ import android.view.Surface
 import android.view.View
 import android.view.WindowManager
 import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -27,6 +28,9 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import com.android.safeway.homegrownexitapp.R
 import com.android.safeway.homegrownexitapp.databinding.ActivityMainBinding
+import com.android.safeway.homegrownexitapp.util.BluetoothLeService
+import com.android.safeway.homegrownexitapp.util.BluetoothLeService.LocalBinder
+import com.android.safeway.homegrownexitapp.util.SampleGattAttributes
 import com.android.safeway.homegrownexitapp.util.Utils
 import com.android.safeway.homegrownexitapp.viewmodel.HomeViewModel
 import com.jiangdg.usbcamera.UVCCameraHelper
@@ -68,6 +72,21 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.RECORD_AUDIO
     )
+
+    //ble
+    private lateinit var mBluetoothLeService: BluetoothLeService
+    private var mConnected = false
+    private var characteristicTX: BluetoothGattCharacteristic? = null
+    private var characteristicRX: BluetoothGattCharacteristic? = null
+
+    val HM_RX_TX = UUID.fromString(SampleGattAttributes.HM_RX_TX)
+
+    private val LIST_NAME = "NAME"
+    private val LIST_UUID = "UUID"
+    private val mConnectionState: TextView? = null
+
+    private val mDeviceName: String? = null
+    private val mDeviceAddress = "10:CE:A9:EA:95:45"
 
     private val listener: OnMyDevConnectListener = object : OnMyDevConnectListener {
         override fun onAttachDev(device: UsbDevice) {
@@ -167,12 +186,27 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
         }
 
         try {
-            binding.btnCaptureImage.setOnClickListener { captureImage() }
+            binding.btnCaptureImage.setOnClickListener { turnRed() }
             binding.btnCaptureVideo.setOnClickListener { captureVideo(3) }
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
+        //ble
+
+
+//        getActionBar().setTitle(mDeviceName);
+        //      getActionBar().setDisplayHomeAsUpEnabled(true);
+        val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
+
+
+    }
+
+    fun turnRed(){
+        characteristicTX!!.setValue("1")
+        mBluetoothLeService.writeCharacteristic(characteristicTX)
+        mBluetoothLeService.setCharacteristicNotification(characteristicRX, true)
     }
 
     private fun showShortMsg(msg: String) {
@@ -251,11 +285,6 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
             initHandle()
         }
         return true
-    }
-
-    override fun onResume() {
-        super.onResume()
-        checkAndRequestPermissions()
     }
 
     private fun initHandle() {
@@ -457,4 +486,103 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, CameraDialogParent,
             isPreview = false
         }
     }
+
+    //ble
+                //-1
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
+            mBluetoothLeService = (service as LocalBinder).service
+            if (!mBluetoothLeService.initialize()) {
+              //  Log.e(DeviceControlActivity.TAG, "Unable to initialize Bluetooth")
+                finish()
+            }
+            // Automatically connects to the device upon successful start-up initialization.
+            mBluetoothLeService.connect(mDeviceAddress)
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+          //  mBluetoothLeService = null
+        }
+    }
+                //-2
+    private val mGattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (BluetoothLeService.ACTION_GATT_CONNECTED == action) {
+                mConnected = true
+                updateConnectionState(R.string.connected)
+                invalidateOptionsMenu()
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED == action) {
+                mConnected = false
+                updateConnectionState(R.string.disconnected)
+                invalidateOptionsMenu()
+               // clearUI()
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED == action) {
+                // Show all the supported services and characteristics on the user interface.
+                displayGattServices(mBluetoothLeService.supportedGattServices)
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE == action) {
+              //  displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA))
+            }
+        }
+    }
+
+                //-3
+    override fun onResume() {
+        super.onResume()
+        checkAndRequestPermissions()
+                    registerReceiver(
+                        mGattUpdateReceiver, makeGattUpdateIntentFilter()
+                    )
+                    if (mBluetoothLeService != null) {
+                        val result = mBluetoothLeService.connect(mDeviceAddress)
+                     //   Log.d(DeviceControlActivity.TAG, "Connect request result=$result")
+                    }
+    }
+
+    //-4
+    private fun updateConnectionState(resourceId: Int) {
+        runOnUiThread { mConnectionState?.setText(resourceId) }
+    }
+
+
+    //-5
+    private fun displayGattServices(gattServices: List<BluetoothGattService>?) {
+        if (gattServices == null) return
+        var uuid: String? = null
+        val unknownServiceString = resources.getString(R.string.unknown_service)
+        val gattServiceData = ArrayList<HashMap<String, String>>()
+
+
+        // Loops through available GATT Services.
+        for (gattService in gattServices) {
+            val currentServiceData = HashMap<String, String>()
+            uuid = gattService.uuid.toString()
+            currentServiceData[LIST_NAME] = SampleGattAttributes.lookup(uuid, unknownServiceString)
+
+            // If the service exists for HM 10 Serial, say so.
+            if (SampleGattAttributes.lookup(uuid, unknownServiceString) === "HM 10 Serial") {
+              //  isSerial.setText("Yes, serial :-)")
+            } else {
+              //  isSerial.setText("No, serial :-(")
+            }
+            currentServiceData[LIST_UUID] = uuid
+            gattServiceData.add(currentServiceData)
+
+            // get characteristic when UUID matches RX/TX UUID
+            characteristicTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX)
+            characteristicRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX)
+        }
+    }
+
+    //-6
+    private fun makeGattUpdateIntentFilter(): IntentFilter? {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED)
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED)
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED)
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE)
+        return intentFilter
+    }
+
+
 }

@@ -98,13 +98,13 @@
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
                     android:orientation="horizontal"
-                    android:visibility="gone">
+                    >
 
                     <Button
                         android:id="@+id/btn_captureImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Snap" />
+                        android:text="Turn Red" />
 
                     <TextView
                         android:layout_width="0dp"
