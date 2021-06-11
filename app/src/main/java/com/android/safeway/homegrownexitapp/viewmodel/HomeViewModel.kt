@@ -22,6 +22,7 @@ class HomeViewModel(application: Application) :
         }
     }
 
+    var count = 0;
     private val tag = "HomeViewModel"
     private val homeRepository = HomeRepository()
 
@@ -44,6 +45,7 @@ class HomeViewModel(application: Application) :
             .observeForever { response: DataWrapper<OrderLookupResponse> ->
                 Utils.dismissProgressDialog()
                 if (response.status == DataWrapper.STATUS.SUCCESS) {
+
                     response.data?.let { response ->
                         if (response.ack != null && response.ack == "0") {
                             //success
@@ -67,8 +69,14 @@ class HomeViewModel(application: Application) :
                             }
 
                         } else {
-                            //failed
-                            setRed()
+                            //todo: Shrini - remove harcoding counter logic once services are up and running.
+                            if(count%2==0){
+                                showGreen.set(true)
+                            }else{
+                                //failed
+                                setRed()
+                            }
+
                         }
                     }
                 } else {
