@@ -22,7 +22,6 @@ class HomeViewModel(application: Application) :
         }
     }
 
-    var count = 0;
     private val tag = "HomeViewModel"
     private val homeRepository = HomeRepository()
 
@@ -38,9 +37,10 @@ class HomeViewModel(application: Application) :
     }
 
     var event: MutableLiveData<CALLBACK> = MutableLiveData(CALLBACK.NONE)
+     var showredlight = false
 
     fun initLookup(orderId: String) {
-        event.postValue(CALLBACK.SHOW_PROGRESS)
+        event.value = CALLBACK.SHOW_PROGRESS
         homeRepository.initOrderLookup(orderId)
             .observeForever { response: DataWrapper<OrderLookupResponse> ->
                 Utils.dismissProgressDialog()
@@ -61,27 +61,71 @@ class HomeViewModel(application: Application) :
                                 }
                             }
                             if (isRestrictedItem) {
-                                setRed()
+
+                                /*//failed
+                                setRed()*/
+
+                                //todo: Shrini - remove harcoding showredlight logic once services are up and running.
+                                if(!showredlight){
+                                    showredlight = true
+                                    showGreen.set(true)
+                                    showRed.set(false)
+                                    event.setValue(CALLBACK.SHOW_GREEN)
+                                }else{
+                                    showredlight = false
+                                    //failed
+                                    setRed()
+                                }
                             } else {
-                                showGreen.set(true)
+                                /*showGreen.set(true)
                                 showRed.set(false)
-                                event.postValue(CALLBACK.SHOW_GREEN)
+                                event.postValue(CALLBACK.SHOW_GREEN)*/
+
+                                //todo: Shrini - remove harcoding showredlight logic once services are up and running.
+
+                                if(!showredlight){
+                                    showredlight = true
+                                    showGreen.set(true)
+                                    showRed.set(false)
+                                    event.setValue(CALLBACK.SHOW_GREEN)
+                                }else{
+                                    showredlight = false
+                                    //failed
+                                    setRed()
+                                }
                             }
 
                         } else {
-                            //todo: Shrini - remove harcoding counter logic once services are up and running.
-                            if(count%2==0){
+                            //todo: Shrini - remove harcoding showredlight logic once services are up and running.
+                            if(!showredlight){
+                                showredlight = true
                                 showGreen.set(true)
+                                showRed.set(false)
+                                event.setValue(CALLBACK.SHOW_GREEN)
                             }else{
+                                showredlight = false
                                 //failed
                                 setRed()
                             }
+                            /*//failed
+                            setRed()*/
+
 
                         }
                     }
                 } else {
-                    //failed
-                    setRed()
+                  /*  //failed
+                    setRed()*/
+                    if(!showredlight){
+                        showredlight = true
+                        showGreen.set(true)
+                        showRed.set(false)
+                        event.setValue(CALLBACK.SHOW_GREEN)
+                    }else{
+                        showredlight = false
+                        //failed
+                        setRed()
+                    }
                 }
             }
     }
@@ -89,7 +133,7 @@ class HomeViewModel(application: Application) :
     private fun setRed() {
         showRed.set(true)
         showGreen.set(false)
-        event.postValue(CALLBACK.SHOW_RED)
+        event.setValue(CALLBACK.SHOW_RED)
 
     }
 }
