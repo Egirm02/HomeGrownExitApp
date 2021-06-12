@@ -22,7 +22,6 @@ class HomeViewModel(application: Application) :
         }
     }
 
-    var count = 0;
     private val tag = "HomeViewModel"
     private val homeRepository = HomeRepository()
 
@@ -69,14 +68,8 @@ class HomeViewModel(application: Application) :
                             }
 
                         } else {
-                            //todo: Shrini - remove harcoding counter logic once services are up and running.
-                            if(count%2==0){
-                                showGreen.set(true)
-                            }else{
-                                //failed
-                                setRed()
-                            }
-
+                            //failed
+                            setRed()
                         }
                     }
                 } else {
