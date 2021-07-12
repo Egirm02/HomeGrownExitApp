@@ -44,6 +44,7 @@ class HomeViewModel(application: Application) :
             .observeForever { response: DataWrapper<OrderLookupResponse> ->
                 Utils.dismissProgressDialog()
                 if (response.status == DataWrapper.STATUS.SUCCESS) {
+
                     response.data?.let { response ->
                         if (response.ack != null && response.ack == "0") {
                             //success
